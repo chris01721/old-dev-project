@@ -1,0 +1,42 @@
+public with sharing class AccHandler {
+    public AccHandler() {
+
+    }
+
+    public void createOpp(List<Account> accts) {
+        List<Opportunity> oppsToCreate = new List<Opportunity>();
+        for (Account a : accts) {
+            Opportunity o = new Opportunity();
+            o.AccountId = a.Id;
+            o.Name = a.Name;
+            o.Type = 'New Customer';
+            o.StageName = 'Qualifying';
+            o.CloseDate = Date.today() + 90;
+            o.Amount = 0.00;
+            oppsToCreate.add(o);
+        }
+        if (!oppsToCreate.isEmpty()) {
+            Database.insert(oppsToCreate,FALSE);
+        }
+    }
+
+    public void updateOppName(List<Account> accts, Map<Id,Account> oldAccts) {
+        Set<ID> acctIds = new Set<ID>();
+        for (Account acct : accts){
+            Account oldAcct = oldAccts.get(acct.id);
+            if(acct.Name != oldAcct.Name){
+                acctIds.add(acct.id);
+            }
+        }
+
+    if (!acctIds.isEmpty()){
+        List<Opportunity> oppsToUpdate = new List<Opportunity>();
+
+        for (Opportunity opp : [SELECT ID FROM Opportunity 
+                                WHERE AccountId IN :acctIds]){
+                oppsToUpdate.add(opp);
+            }
+        Database.update(oppsToUpdate, false);
+        }
+    }
+}
