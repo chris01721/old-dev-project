@@ -1,0 +1,67 @@
+public with sharing class OppHandler {
+    public OppHandler() {
+
+    }
+
+    public void updateOppName(List<Opportunity> opps) {
+        Set<ID> accIds = new Set<ID>();
+        for (Opportunity opp : opps) {
+            accIds.add(opp.AccountId);
+        }
+
+        Map<Id,String> acctNames = new Map<Id,String>();
+        for (Account acct : [SELECT Name FROM Account WHERE Id IN :accIds]) {
+            acctNames.put(acct.Id, acct.Name);
+        }
+
+        for (Opportunity opp : opps) {
+            opp.Name = acctNames.get(opp.AccountId) + '-' + opp.Type + '-'
+            + opp.CloseDate.year() + '/' + opp.CloseDate.month();
+        }
+    }
+
+    //This version is for inserts.
+    public void createInvoiceFromOpp(List<Opportunity> opps) {
+        //If it is a new opportunity and is set as won then create invoice.
+        //If it is an existing opportunity and updated as won then create invoice.
+    
+        List<Invoice__c> invToCreate = new List<Invoice__c>();
+        for (Opportunity opp : opps) {
+            if (opp.IsWon) {
+                    Invoice__c inv = new Invoice__c();
+                    inv.OwnerId = opp.OwnerId;
+                    inv.AccountId__c = opp.AccountId;
+                    inv.OpportunityId__c = opp.Id;
+                    inv.BillingContactId__c = opp.ContactId;
+                    inv.Amount__c = opp.Amount;
+                    inv.Due_Date__c = opp.CloseDate + 30;
+                    invToCreate.add(inv);
+                }
+        }
+        if (!invToCreate.isEmpty()) {
+            Database.insert(invToCreate, FALSE);
+        }
+    }
+
+    //This version is for updates.
+    public void createInvoiceFromOpp(List<Opportunity> opps, Map<Id,Opportunity> oldOpps) {
+        //If it is a new opportunity and is set as won then create invoice.
+        //If it is an existing opportunity and updated as won then create invoice.
+    
+        List<Invoice__c> invToCreate = new List<Invoice__c>();
+        for (Opportunity opp : opps) {
+            if (opp.IsWon && !oldOpps.get(opp.Id).IsWon) {
+                    Invoice__c inv = new Invoice__c();
+                    inv.AccountId__c = opp.AccountId;
+                    inv.OpportunityId__c = opp.Id;
+                    inv.BillingContactId__c = opp.ContactId;
+                    inv.Amount__c = opp.Amount;
+                    inv.Due_Date__c = opp.CloseDate + 30;
+                    invToCreate.add(inv);
+                }
+        }
+        if (!invToCreate.isEmpty()) {
+            Database.insert(invToCreate, FALSE);
+        }
+    }
+}
