@@ -1,0 +1,16 @@
+{
+  "orgName": "Demo company",
+  "edition": "Developer",
+  "hasSampleData":true,
+  "adminEmail": "chris.h@17grapes.com",
+  "username": "admin@spdex450.org",
+  "features": ["EnableSetPasswordInApi"],
+  "settings": {
+    "lightningExperienceSettings": {
+      "enableS1DesktopEnabled": true
+    },
+    "mobileSettings": {
+      "enableS1EncryptedStoragePref2": false
+    }
+  }
+}
